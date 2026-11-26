@@ -10,4 +10,6 @@ nav span { display: block; margin-top: .35rem; color: #302922; }
 nav span, ol, .volver { font: 1.125rem/1.5 system-ui, sans-serif; }
 .volver { display: inline-block; padding: .6rem 0; }
 ol { padding-left: 1.75rem; }
-ol li { padding: .8rem 0 .8rem .25rem; }
+ol li a { display: block; padding: .8rem 0 .8rem .25rem; }
+article p { font: 1.0625rem/1.55 system-ui, sans-serif; }
+article blockquote { margin: 1.5rem 0; font: 1.3rem/1.6 Georgia, serif; }
