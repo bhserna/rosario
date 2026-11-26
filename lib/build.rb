@@ -36,10 +36,10 @@ Page = Data.define(:path, :template, :locals) do
   end
 
   def self.all
-    groups = GROUPS.map { |group| Group.from(group) }
+    groups = Group.all
     [
       index_page(groups),
-      today_page(groups_by_weekday(groups)),
+      today_page(Group.by_weekday),
       *groups.flat_map(&:pages)
     ]
   end
@@ -105,6 +105,16 @@ Mystery = Data.define(:title, :reading) do
 end
 
 Group = Data.define(:id, :name, :source, :days, :mysteries) do
+  def self.all
+    GROUPS.map { |group| from(group) }
+  end
+
+  def self.by_weekday
+    all.each_with_object(Array.new(7)) do |group, ids|
+      group.days.each { |day| ids[day.wday] = group.id }
+    end
+  end
+
   def self.from(hash)
     new(
       id: hash[:id],
@@ -135,12 +145,6 @@ Group = Data.define(:id, :name, :source, :days, :mysteries) do
 
   def pages
     [page, *mysteries.each_with_index.map { |mystery, index| mystery.page(self, index + 1) }]
-  end
-end
-
-def groups_by_weekday(groups)
-  groups.each_with_object(Array.new(7)) do |group, ids|
-    group.days.each { |day| ids[day.wday] = group.id }
   end
 end
 
