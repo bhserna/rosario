@@ -1,15 +1,61 @@
-require "digest"
-require "erb"
-require "fileutils"
-require "json"
-require_relative "mysteries"
+# frozen_string_literal: true
 
-ROOT = File.expand_path("..", __dir__)
-TEMPLATES = File.join(ROOT, "templates")
-STATIC = File.join(ROOT, "static")
+require 'digest'
+require 'erb'
+require 'fileutils'
+require 'json'
+require_relative 'mysteries'
+
+ROOT = File.expand_path('..', __dir__)
+TEMPLATES = File.join(ROOT, 'templates')
+STATIC = File.join(ROOT, 'static')
 
 Day = Data.define(:wday, :name)
-Page = Data.define(:path, :template, :locals)
+Page = Data.define(:path, :template, :locals) do
+  def self.index_page(groups)
+    new(
+      'index.html',
+      'index.html.erb',
+      {
+        groups: groups,
+        title: 'Misterios del rosario',
+        label: 'Índice de los misterios del rosario'
+      }
+    )
+  end
+
+  def self.today_page(by_weekday)
+    new(
+      'today.html',
+      'today.html.erb',
+      {
+        title: 'Misterios de hoy',
+        head: render('today_redirect.html.erb', by_weekday: by_weekday)
+      }
+    )
+  end
+
+  def self.all
+    groups = GROUPS.map { |group| Group.from(group) }
+    [
+      index_page(groups),
+      today_page(groups_by_weekday(groups)),
+      *groups.flat_map(&:pages)
+    ]
+  end
+
+  def root
+    '../' * path.count('/')
+  end
+
+  def css_path
+    "#{root}rosario.css"
+  end
+
+  def sw_path
+    "#{root}sw.js"
+  end
+end
 
 ServiceWorker = Data.define(:files, :version) do
   def self.from(rendered)
@@ -23,11 +69,11 @@ ServiceWorker = Data.define(:files, :version) do
   end
 
   def path
-    "sw.js"
+    'sw.js'
   end
 
   def template
-    "sw.js.erb"
+    'sw.js.erb'
   end
 
   def locals
@@ -41,11 +87,20 @@ Mystery = Data.define(:title, :reading) do
   end
 
   def template
-    "mystery.html.erb"
+    'mystery.html.erb'
   end
 
   def page(group, number)
-    Page.new(page_path(group, number), template, { group: group, mystery: self, number: number })
+    Page.new(
+      page_path(group, number),
+      template,
+      {
+        group: group,
+        mystery: self,
+        number: number,
+        title: "#{title} · #{group.name}"
+      }
+    )
   end
 end
 
@@ -63,7 +118,7 @@ Group = Data.define(:id, :name, :source, :days, :mysteries) do
   def day_label
     names = days.map(&:name)
     names[0] = names[0].capitalize
-    names.join(" y ")
+    names.join(' y ')
   end
 
   def page_path
@@ -71,11 +126,11 @@ Group = Data.define(:id, :name, :source, :days, :mysteries) do
   end
 
   def template
-    "group.html.erb"
+    'group.html.erb'
   end
 
   def page
-    Page.new(page_path, template, { group: self })
+    Page.new(page_path, template, { group: self, title: name })
   end
 
   def pages
@@ -90,8 +145,21 @@ def groups_by_weekday(groups)
 end
 
 def render(template, **locals)
-  erb = ERB.new(File.read(File.join(TEMPLATES, template)), trim_mode: "-")
+  erb = ERB.new(File.read(File.join(TEMPLATES, template)), trim_mode: '-')
   erb.result_with_hash(locals)
+end
+
+def render_page(page)
+  locals = page.locals
+  render(
+    'layout.html.erb',
+    **locals,
+    content: render(page.template, **locals),
+    head: locals.fetch(:head, ''),
+    label: locals.fetch(:label, nil),
+    css_path: page.css_path,
+    sw_path: page.sw_path
+  )
 end
 
 def write_page(root, path, content)
@@ -106,17 +174,8 @@ def copy_static(root)
   end
 end
 
-def pages(groups)
-  [
-    Page.new("index.html", "index.html.erb", { groups: groups }),
-    Page.new("today.html", "today.html.erb", { by_weekday: groups_by_weekday(groups) }),
-    *groups.flat_map(&:pages)
-  ]
-end
-
 def render_pages
-  groups = GROUPS.map { |group| Group.from(group) }
-  pages(groups).map { |page| [page.path, render(page.template, **page.locals)] }
+  Page.all.map { |page| [page.path, render_page(page)] }
 end
 
 def write_service_worker(root, rendered)
@@ -124,7 +183,7 @@ def write_service_worker(root, rendered)
   write_page(root, worker.path, render(worker.template, **worker.locals))
 end
 
-def build(root = File.join(ROOT, "build"))
+def build(root = File.join(ROOT, 'build'))
   FileUtils.mkdir_p(root)
   copy_static(root)
 

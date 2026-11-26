@@ -1,0 +1,4 @@
+  <script>
+    const groups = [<%= by_weekday.map { |id| "'#{id}'" }.join(", ") %>];
+    location.replace(groups[new Date().getDay()] + '.html');
+  </script>

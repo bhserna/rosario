@@ -1,0 +1,6 @@
+AllCops:
+  NewCops: enable
+
+Layout/LineLength:
+  Exclude:
+    - lib/mysteries.rb
