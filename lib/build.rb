@@ -7,7 +7,21 @@ TEMPLATES = File.join(ROOT, "templates")
 STATIC = File.join(ROOT, "static")
 
 Day = Data.define(:wday, :name)
-Mystery = Data.define(:title, :reading)
+Page = Data.define(:path, :template, :locals)
+
+Mystery = Data.define(:title, :reading) do
+  def page_path(group, number)
+    "misterios/#{group.id}-#{number}.html"
+  end
+
+  def template
+    "mystery.html.erb"
+  end
+
+  def page(group, number)
+    Page.new(page_path(group, number), template, { group: group, mystery: self, number: number })
+  end
+end
 
 Group = Data.define(:id, :name, :source, :days, :mysteries) do
   def self.from(hash)
@@ -24,6 +38,22 @@ Group = Data.define(:id, :name, :source, :days, :mysteries) do
     names = days.map(&:name)
     names[0] = names[0].capitalize
     names.join(" y ")
+  end
+
+  def page_path
+    "#{id}.html"
+  end
+
+  def template
+    "group.html.erb"
+  end
+
+  def page
+    Page.new(page_path, template, { group: self })
+  end
+
+  def pages
+    [page, *mysteries.each_with_index.map { |mystery, index| mystery.page(self, index + 1) }]
   end
 end
 
@@ -50,25 +80,21 @@ def copy_static(root)
   end
 end
 
+def pages(groups)
+  [
+    Page.new("index.html", "index.html.erb", { groups: groups }),
+    Page.new("today.html", "today.html.erb", { by_weekday: groups_by_weekday(groups) }),
+    *groups.flat_map(&:pages)
+  ]
+end
+
 def build(root = File.join(ROOT, "build"))
   FileUtils.mkdir_p(root)
   copy_static(root)
 
   groups = GROUPS.map { |group| Group.from(group) }
-  by_weekday = groups_by_weekday(groups)
-  write_page(root, "index.html", render("index.html.erb", groups: groups))
-  write_page(root, "today.html", render("today.html.erb", by_weekday: by_weekday))
-
-  groups.each do |group|
-    write_page(root, "#{group.id}.html", render("group.html.erb", group: group))
-    group.mysteries.each_with_index do |mystery, index|
-      number = index + 1
-      write_page(
-        root,
-        "misterios/#{group.id}-#{number}.html",
-        render("mystery.html.erb", group: group, mystery: mystery, number: number)
-      )
-    end
+  pages(groups).each do |page|
+    write_page(root, page.path, render(page.template, **page.locals))
   end
 end
 
