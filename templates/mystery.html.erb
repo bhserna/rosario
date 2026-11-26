@@ -17,5 +17,8 @@
       <p><a href="<%= group.source %>">Fuente: El Santo Rosario (Vaticano)</a></p>
     </article>
   </main>
+  <script>
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("../sw.js");
+  </script>
 </body>
 </html>

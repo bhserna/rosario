@@ -23,6 +23,14 @@ class BuildTest < Minitest::Test
 
       mystery = File.read(File.join(dir, "misterios/gozosos-1.html"))
       assert_includes mystery, "La Encarnación del Hijo de Dios"
+      assert_includes mystery, 'register("../sw.js")'
+
+      assert_includes index, 'register("sw.js")'
+      worker = File.read(File.join(dir, "sw.js"))
+      assert_includes worker, '"./index.html"'
+      assert_includes worker, '"./rosario.css"'
+      assert_includes worker, '"./misterios/gozosos-1.html"'
+      assert_match(/const CACHE = "rosario-[0-9a-f]{12}"/, worker)
 
       assert_equal File.read(File.join(STATIC, "rosario.css")), File.read(File.join(dir, "rosario.css"))
       assert_equal File.read(File.join(STATIC, "como-se-reza.html")), File.read(File.join(dir, "como-se-reza.html"))

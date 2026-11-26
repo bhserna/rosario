@@ -1,5 +1,7 @@
+require "digest"
 require "erb"
 require "fileutils"
+require "json"
 require_relative "mysteries"
 
 ROOT = File.expand_path("..", __dir__)
@@ -8,6 +10,30 @@ STATIC = File.join(ROOT, "static")
 
 Day = Data.define(:wday, :name)
 Page = Data.define(:path, :template, :locals)
+
+ServiceWorker = Data.define(:files, :version) do
+  def self.from(rendered)
+    static = Dir.children(STATIC).sort
+    bodies = rendered.map(&:last) + static.map { |name| File.read(File.join(STATIC, name)) }
+
+    new(
+      rendered.map { |path, _body| "./#{path}" } + static.map { |name| "./#{name}" },
+      Digest::SHA256.hexdigest(bodies.join)[0, 12]
+    )
+  end
+
+  def path
+    "sw.js"
+  end
+
+  def template
+    "sw.js.erb"
+  end
+
+  def locals
+    { files: files, version: version }
+  end
+end
 
 Mystery = Data.define(:title, :reading) do
   def page_path(group, number)
@@ -88,14 +114,23 @@ def pages(groups)
   ]
 end
 
+def render_pages
+  groups = GROUPS.map { |group| Group.from(group) }
+  pages(groups).map { |page| [page.path, render(page.template, **page.locals)] }
+end
+
+def write_service_worker(root, rendered)
+  worker = ServiceWorker.from(rendered)
+  write_page(root, worker.path, render(worker.template, **worker.locals))
+end
+
 def build(root = File.join(ROOT, "build"))
   FileUtils.mkdir_p(root)
   copy_static(root)
 
-  groups = GROUPS.map { |group| Group.from(group) }
-  pages(groups).each do |page|
-    write_page(root, page.path, render(page.template, **page.locals))
-  end
+  rendered = render_pages
+  write_service_worker(root, rendered)
+  rendered.each { |path, body| write_page(root, path, body) }
 end
 
 build if __FILE__ == $PROGRAM_NAME
