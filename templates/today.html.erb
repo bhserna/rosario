@@ -6,8 +6,8 @@
   <title>Misterios de hoy</title>
   <link rel="stylesheet" href="rosario.css">
   <script>
-    const grupos = ['gloriosos', 'gozosos', 'dolorosos', 'gloriosos', 'luminosos', 'dolorosos', 'gozosos'];
-    location.replace(grupos[new Date().getDay()] + '.html');
+    const groups = [<%= by_weekday.map { |id| "'#{id}'" }.join(", ") %>];
+    location.replace(groups[new Date().getDay()] + '.html');
   </script>
 </head>
 <body>

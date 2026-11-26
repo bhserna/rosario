@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Misterios del rosario</title>
+  <link rel="stylesheet" href="rosario.css">
+</head>
+<body>
+  <main aria-label="Índice de los misterios del rosario">
+    <p><a class="volver" href="today.html"><strong>Misterios de hoy</strong></a></p>
+    <nav aria-label="Grupos de misterios">
+      <ul>
+<% groups.each do |group| -%>
+        <li><a href="<%= group.id %>.html"><strong><%= group.name %></strong><span><%= group.day_label %></span></a></li>
+<% end -%>
+      </ul>
+    </nav>
+    <p><a class="volver" href="como-se-reza.html">Cómo se reza el rosario</a></p>
+  </main>
+</body>
+</html>

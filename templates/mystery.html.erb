@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= mystery.title %> · <%= group.name %></title>
+  <link rel="stylesheet" href="../rosario.css">
+</head>
+<body>
+  <main>
+    <a class="volver" href="../<%= group.id %>.html">← <%= group.name %></a>
+    <article>
+      <p>Misterio <%= number %> de <%= group.mysteries.size %></p>
+      <h1><%= mystery.title %></h1>
+      <blockquote><%= mystery.reading %></blockquote>
+      <p>Después de una breve pausa de reflexión, reza un padrenuestro, diez avemarías y un gloria.</p>
+      <p><a href="<%= group.source %>">Fuente: El Santo Rosario (Vaticano)</a></p>
+    </article>
+  </main>
+</body>
+</html>
