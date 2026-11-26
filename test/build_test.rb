@@ -3,16 +3,29 @@ require "tmpdir"
 require_relative "../build"
 
 class BuildTest < Minitest::Test
-  def test_pages_match_the_build
+  def test_writes_the_site_into_the_given_directory
     Dir.mktmpdir do |dir|
       build(dir)
 
-      pages = Dir.glob("*.html", base: dir) + Dir.glob("misterios/*.html", base: dir)
-      assert_equal 26, pages.size
-
-      pages.each do |page|
-        assert_equal File.read(File.join(dir, page)), File.read(File.join(ROOT, page)), page
+      pages = ["index.html", "today.html", "como-se-reza.html", "rosario.css"]
+      GROUPS.each do |group|
+        pages << "#{group[:id]}.html"
+        group[:mysteries].each_index { |index| pages << "misterios/#{group[:id]}-#{index + 1}.html" }
       end
+      pages.each { |page| assert File.exist?(File.join(dir, page)), page }
+
+      index = File.read(File.join(dir, "index.html"))
+      assert_includes index, 'href="today.html"'
+      assert_includes index, "Lunes y sábado"
+
+      today = File.read(File.join(dir, "today.html"))
+      assert_includes today, "['gloriosos', 'gozosos', 'dolorosos', 'gloriosos', 'luminosos', 'dolorosos', 'gozosos']"
+
+      mystery = File.read(File.join(dir, "misterios/gozosos-1.html"))
+      assert_includes mystery, "La Encarnación del Hijo de Dios"
+
+      assert_equal File.read(File.join(STATIC, "rosario.css")), File.read(File.join(dir, "rosario.css"))
+      assert_equal File.read(File.join(STATIC, "como-se-reza.html")), File.read(File.join(dir, "como-se-reza.html"))
     end
   end
 end

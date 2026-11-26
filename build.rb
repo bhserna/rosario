@@ -5,6 +5,7 @@ require_relative "mysteries"
 
 ROOT = File.expand_path(__dir__)
 TEMPLATES = File.join(ROOT, "templates")
+STATIC = File.join(ROOT, "static")
 
 Day = Data.define(:wday, :name)
 Mystery = Data.define(:title, :reading)
@@ -44,7 +45,16 @@ def write_page(root, path, content)
   File.write(destination, content)
 end
 
-def build(root = ROOT)
+def copy_static(root)
+  Dir.children(STATIC).each do |name|
+    FileUtils.cp(File.join(STATIC, name), File.join(root, name))
+  end
+end
+
+def build(root = File.join(ROOT, "build"))
+  FileUtils.mkdir_p(root)
+  copy_static(root)
+
   groups = GROUPS.map { |group| Group.from(group) }
   by_weekday = groups_by_weekday(groups)
   write_page(root, "index.html", render("index.html.erb", groups: groups))
