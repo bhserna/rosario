@@ -1,0 +1,5 @@
+- [ ] Prototipar ideas de diseño para móvil y seleccionar una
+- [ ] Prototipar ideas de diseño para desktop y seleccionar una
+- [ ] Implementarla de forma simple con HTML y CSS (/yagni)
+- [ ] Hacer algo para sugerir instalarla y explicar cómo funciona
+- [ ] Hacer que funcione offline
