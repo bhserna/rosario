@@ -1,6 +1,6 @@
 require "minitest/autorun"
 require "tmpdir"
-require_relative "../build"
+require_relative "../lib/build"
 
 class BuildTest < Minitest::Test
   def test_writes_the_site_into_the_given_directory

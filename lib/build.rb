@@ -1,9 +1,8 @@
-#!/usr/bin/env ruby
 require "erb"
 require "fileutils"
 require_relative "mysteries"
 
-ROOT = File.expand_path(__dir__)
+ROOT = File.expand_path("..", __dir__)
 TEMPLATES = File.join(ROOT, "templates")
 STATIC = File.join(ROOT, "static")
 
