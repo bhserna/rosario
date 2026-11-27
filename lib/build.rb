@@ -52,6 +52,14 @@ Page = Data.define(:path, :template, :locals) do
     "#{root}rosario.css"
   end
 
+  def icon_path
+    "#{root}apple-touch-icon.png"
+  end
+
+  def manifest_path
+    "#{root}manifest.webmanifest"
+  end
+
   def sw_path
     "#{root}sw.js"
   end
@@ -60,7 +68,7 @@ end
 ServiceWorker = Data.define(:files, :version) do
   def self.from(rendered)
     static = Dir.children(STATIC).sort
-    bodies = rendered.map(&:last) + static.map { |name| File.read(File.join(STATIC, name)) }
+    bodies = rendered.map { |_path, body| body.b } + static.map { |name| File.binread(File.join(STATIC, name)) }
 
     new(
       rendered.map { |path, _body| "./#{path}" } + static.map { |name| "./#{name}" },
@@ -161,8 +169,7 @@ def render_page(page)
     content: render(page.template, **locals),
     head: locals.fetch(:head, ''),
     label: locals.fetch(:label, nil),
-    css_path: page.css_path,
-    sw_path: page.sw_path
+    css_path: page.css_path, icon_path: page.icon_path, manifest_path: page.manifest_path, sw_path: page.sw_path
   )
 end
 

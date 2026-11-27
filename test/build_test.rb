@@ -21,7 +21,7 @@ class BuildTest < Minitest::Test
   private
 
   def assert_expected_files(dir)
-    pages = ['index.html', 'today.html', 'como-se-reza.html', 'rosario.css']
+    pages = %w[index.html today.html como-se-reza.html rosario.css apple-touch-icon.png manifest.webmanifest]
     GROUPS.each do |group|
       pages << "#{group[:id]}.html"
       group[:mysteries].each_index { |index| pages << "misterios/#{group[:id]}-#{index + 1}.html" }
@@ -34,6 +34,9 @@ class BuildTest < Minitest::Test
     assert_includes index, 'href="today.html"'
     assert_includes index, 'Lunes y sábado'
     assert_includes index, 'register("sw.js")'
+    assert_includes index, 'href="apple-touch-icon.png"'
+    assert_includes index, 'href="manifest.webmanifest"'
+    assert_includes index, 'apple-mobile-web-app-capable" content="yes"'
   end
 
   def assert_today(dir)
@@ -45,12 +48,16 @@ class BuildTest < Minitest::Test
     mystery = read_page(dir, 'misterios/gozosos-1.html')
     assert_includes mystery, 'La Encarnación del Hijo de Dios'
     assert_includes mystery, 'register("../sw.js")'
+    assert_includes mystery, 'href="../apple-touch-icon.png"'
+    assert_includes mystery, 'href="../manifest.webmanifest"'
   end
 
   def assert_service_worker(dir)
     worker = read_page(dir, 'sw.js')
     assert_includes worker, '"./index.html"'
     assert_includes worker, '"./rosario.css"'
+    assert_includes worker, '"./apple-touch-icon.png"'
+    assert_includes worker, '"./manifest.webmanifest"'
     assert_includes worker, '"./misterios/gozosos-1.html"'
     assert_match(/const CACHE = "rosario-[0-9a-f]{12}"/, worker)
   end
@@ -58,6 +65,7 @@ class BuildTest < Minitest::Test
   def assert_static_files(dir)
     assert_equal read_source('rosario.css'), read_page(dir, 'rosario.css')
     assert_equal read_source('como-se-reza.html'), read_page(dir, 'como-se-reza.html')
+    assert_includes read_page(dir, 'manifest.webmanifest'), '"display": "standalone"'
   end
 
   def read_page(dir, page)
